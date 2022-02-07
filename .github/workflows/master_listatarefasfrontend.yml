@@ -1,49 +1,46 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Deployment
+name: Build and deploy ASP.Net Core app to Azure Web App - listatarefasfrontend
 
 on:
   push:
     branches:
-      - main
+      - master
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v2
-      - name: Build Pelican Website
-        uses: rehanhaider/pelican-build-action@v0.1.10
-        env:
-          PELICAN_CONFIG_FILE: app/publishconf.py
-          PELICAN_CONTENT_FOLDER: app/content
-      - name: Upload the build output
-        uses: actions/upload-artifact@v2
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
         with:
-          name: build-output
-          path: |
-            output/
-            .firebaserc
-            firebase.json
-          retention-days: 1
+          dotnet-version: '3.1.301'
+          include-prerelease: true
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+
   deploy:
-    name: Deploy
-    needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
     steps:
-      - name: Download the build output
+      - name: Download artifact from build job
         uses: actions/download-artifact@v2
         with:
-          name: build-output
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CLOUDBYTES_PROD }}"
-          channelId: live
-          projectId: cloudbytes-prod
+          name: .net-app
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -53,3 +50,4 @@ jobs:
           slot-name: 'production'
           publish-profile: ${{ secrets.AzureAppService_PublishProfile_1234 }}
           package: .
+
