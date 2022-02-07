@@ -1,48 +1,49 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - listatarefasfrontend
+name: Deployment
 
 on:
   push:
     branches:
-      - master
-  workflow_dispatch:
+      - main
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    name: Build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
+      - name: Build Pelican Website
+        uses: rehanhaider/pelican-build-action@v0.1.10
+        env:
+          PELICAN_CONFIG_FILE: app/publishconf.py
+          PELICAN_CONTENT_FOLDER: app/content
+      - name: Upload the build output
+        uses: actions/upload-artifact@v2
         with:
-          dotnet-version: '3.1.301'
-          include-prerelease: true
-
-      - name: Build with dotnet
-       
-
-      - name: dotnet publish
-   
-
-
- 
-
+          name: build-output
+          path: |
+            output/
+            .firebaserc
+            firebase.json
+          retention-days: 1
   deploy:
-    runs-on: windows-latest
-    needs: build
-    environment:
-      name: 'production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
+    name: Deploy
+    needs: [build]
+    runs-on: ubuntu-latest
     steps:
-      - name: Download artifact from build job
+      - name: Download the build output
         uses: actions/download-artifact@v2
         with:
-          name: .net-app
+          name: build-output
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CLOUDBYTES_PROD }}"
+          channelId: live
+          projectId: cloudbytes-prod
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
