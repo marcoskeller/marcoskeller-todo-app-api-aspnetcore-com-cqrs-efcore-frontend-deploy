@@ -28,7 +28,7 @@ jobs:
       - name: dotnet publish
    
 
-      - name: Upload artifact for deployment job
+
  
 
   deploy:
