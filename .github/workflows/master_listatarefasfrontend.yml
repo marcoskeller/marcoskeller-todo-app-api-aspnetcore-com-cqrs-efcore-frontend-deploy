@@ -23,22 +23,22 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
-        run: ""
+        run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: ""
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
-      - name: ""
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
-          name: code-coverage-report
-          path: output/test/code-coverage.html
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
     runs-on: windows-latest
     needs: build
     environment:
-      name: 'Production'
+      name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -52,6 +52,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'listatarefasfrontend'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_200B0772C9B4473787ACCA6A52645437 }}
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_1234 }}
           package: .
