@@ -31,8 +31,8 @@ jobs:
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: code-coverage-report
+          path: output/test/code-coverage.html
 
   deploy:
     runs-on: windows-latest
